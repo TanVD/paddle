@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+
+import "google/protobuf/empty.proto";
+package io.paddle.plugin.interop;
+
+/**
+ * Paddle's plugins service definition.
+ */
+service Plugins {
+
+  /**
+   * Initializes project stub on Python Plugins Server.
+   */
+  rpc InitializeProjectStub (InitializeProjectRequest) returns (google.protobuf.Empty) {}
+
+  /**
+   * Imports plugins from specified local python modules into Python Plugins Server.
+   */
+  rpc ImportPyModulePlugins (ImportPyModulePluginsRequest) returns (google.protobuf.Empty) {}
+
+  /**
+   * Imports plugins from specified python packages into Python Plugins Server.
+   */
+  rpc ImportPyPackagePlugins (ImportPyPackagePluginsRequest) returns (google.protobuf.Empty) {}
+
+  /**
+   * Executes configure of specified project with specified plugin.
+   */
+  rpc Configure (ProcessPluginRequest) returns (google.protobuf.Empty) {}
+
+  /**
+   * Requests info about all tasks of specified plugin.
+   */
+  rpc Tasks (ProcessPluginRequest) returns (GetTasksResponse) {}
+
+  /**
+   * Initializes specified task with respect to specified project.
+   */
+  rpc Initialize (ProcessTaskRequest) returns (google.protobuf.Empty) {}
+
+  /**
+   * Executes action of specified task with respect to specified project.
+   */
+  rpc Act (ProcessTaskRequest) returns (google.protobuf.Empty) {}
+}
+
+message InitializeProjectRequest {
+  string projectId = 1;
+  string workingDir = 2;
+  string pluginsSitePackages = 3;
+}
+
+message ImportPyModulePluginsRequest {
+  string projectId = 1;
+  repeated PyModuleInfo modules = 2;
+}
+
+message PyModuleInfo {
+  string absoluteRepoDir = 1;
+  string relativeDirToModule = 2;
+}
+
+message ImportPyPackagePluginsRequest {
+  string projectId = 1;
+  repeated PyPackageInfo packages = 2;
+}
+
+message PyPackageInfo {
+  string packageName = 1;
+  string distributionUrl = 2;
+}
+
+message ProcessPluginRequest {
+  string projectId = 1;
+  string pluginHash = 2;
+}
+
+message GetTasksResponse {
+  repeated TaskInfo tasksInfo = 1;
+}
+
+message TaskInfo {
+  string id = 1;
+  string group = 2;
+  repeated string depsIds = 3;
+}
+
+message ProcessTaskRequest {
+  string projectId = 1;
+  string taskId = 2;
+}

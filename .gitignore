@@ -7,3 +7,4 @@ build
 .pytest_cache
 *.iml
 cli/src/main/resources/version.txt
+/core/src/gen/

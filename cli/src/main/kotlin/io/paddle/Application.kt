@@ -2,7 +2,7 @@ package io.paddle
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.arguments.argument
-import io.paddle.plugin.standard.extensions.plugins
+import io.paddle.plugin.plugins
 import io.paddle.project.Project
 import io.paddle.tasks.Task
 import io.paddle.terminal.Terminal
@@ -27,9 +27,9 @@ fun main(args: Array<String>) {
         Terminal(TextOutput.Console).stderr("Can't find paddle.yaml in root")
         return
     }
+
     val project = Project.load(file).also {
         it.register(it.plugins.enabled)
     }
-
     Paddle(project).main(args)
 }

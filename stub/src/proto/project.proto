@@ -1,0 +1,175 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+
+import "google/protobuf/empty.proto";
+import "plugins.proto";
+package io.paddle.plugin.interop;
+
+/**
+ * Paddle's project API service definition.
+ */
+service Project {
+  /**
+   * Prints message to the terminal associated with specified project.
+   */
+  rpc PrintMessage (PrintRequest) returns (google.protobuf.Empty) {}
+
+  /**
+   * Executes specified command with passed arguments.
+   */
+  rpc ExecuteCommand (ExecuteCommandRequest) returns (google.protobuf.Empty) {}
+
+  /**
+   * Returns working directory path for specified project.
+   */
+  rpc GetWorkingDirectory (ProjectInfoRequest) returns (WorkingDir) {}
+
+  /**
+   * Returns description of specified project.
+   */
+  rpc GetDescription (ProjectInfoRequest) returns (Description) {}
+
+  /**
+   * Returns triple consists of list of file paths to project source code,
+   * list of paths to project test files and list of paths to project resource files.
+   */
+  rpc GetRoots (ProjectInfoRequest) returns (Roots) {}
+
+  /**
+   * Add paths to specified project's sources roots.
+   */
+  rpc AddSources (AddPathsRequest) returns (google.protobuf.Empty) {}
+
+  /**
+   * Add paths to specified project's tests roots.
+   */
+  rpc AddTests (AddPathsRequest) returns (google.protobuf.Empty) {}
+
+  /**
+   * Add paths to specified project's resources roots.
+   */
+  rpc AddResources (AddPathsRequest) returns (google.protobuf.Empty) {}
+
+  /**
+   * Returns list of tasks names associates with specified project.
+   */
+  rpc GetTasksNames (ProjectInfoRequest) returns (Tasks) {}
+
+  /**
+   * Run task by id associate with specfied project.
+   */
+  rpc RunTask (ProcessTaskRequest) returns (google.protobuf.Empty) {}
+
+  /**
+   * Add specified paths to clean task's location list.
+   */
+  rpc AddCleanLocation (AddPathsRequest) returns (google.protobuf.Empty) {}
+
+  /**
+   * Returns configuration specification of specified project.
+   */
+  rpc GetConfigurationSpecification (ProjectInfoRequest) returns (CompositeSpecNode) {}
+
+  /**
+   * Updates configuration specification of specified project.
+   */
+  rpc UpdateConfigurationSpecification (UpdateConfigSpecRequest) returns (google.protobuf.Empty) {}
+}
+
+message PrintRequest {
+  string projectId = 1;
+  string message = 2;
+
+  enum Type {
+    DEBUG = 0;
+    INFO = 1;
+    WARN = 2;
+    ERROR = 3;
+    OUT = 4;
+    ERR = 5;
+  }
+
+  Type type = 3;
+}
+
+message ExecuteCommandRequest {
+  string projectId = 1;
+  string command = 2;
+  repeated string args = 3;
+}
+
+message ProjectInfoRequest {
+  string projectId = 1;
+}
+
+message WorkingDir {
+  string path = 1;
+}
+
+message Description {
+  string name = 1;
+  string version = 2;
+}
+
+message Roots {
+  repeated string sources = 1;
+  repeated string tests = 2;
+  repeated string resources = 3;
+}
+
+message AddPathsRequest {
+  string projectId = 1;
+  repeated string paths = 2;
+}
+
+message Tasks {
+  repeated string names = 1;
+}
+
+message UpdateConfigSpecRequest {
+  string projectId = 1;
+  SpecNode configSpec = 2;
+}
+
+message SpecNode {
+  oneof actual {
+    CompositeSpecNode composite = 1;
+    ArraySpecNode array = 2;
+    StringSpecNode str = 3;
+    BooleanSpecNode boolean = 4;
+    IntegerSpecNode integer = 5;
+  }
+}
+
+message CompositeSpecNode {
+  string title = 1;
+  string description = 2;
+  repeated string required = 3;
+  map<string, SpecNode> properties = 4;
+  repeated CompositeSpecNode valid = 5;
+}
+
+message ArraySpecNode {
+  string title = 1;
+  string description = 2;
+  SpecNode items = 3;
+}
+
+message StringSpecNode {
+  string title = 1;
+  string description = 2;
+  repeated string valid = 3;
+}
+
+message BooleanSpecNode {
+  string title = 1;
+  string description = 2;
+  repeated bool valid = 3;
+}
+
+message IntegerSpecNode {
+  string title = 1;
+  string description = 2;
+  repeated int32 valid = 3;
+}

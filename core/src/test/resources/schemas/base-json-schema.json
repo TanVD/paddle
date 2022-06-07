@@ -1,0 +1,138 @@
+{
+    "type": "object",
+    "title": "Paddle.build",
+    "description": "Configuration of Paddle build",
+    "required": [
+        "descriptor"
+    ],
+    "properties": {
+        "descriptor": {
+            "type": "object",
+            "required": [
+                "name",
+                "version"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Name of the project"
+                },
+                "version": {
+                    "type": "string",
+                    "description": "Version of the project"
+                }
+            }
+        },
+        "roots": {
+            "type": "object",
+            "description": "Roots of the projects",
+            "properties": {
+                "sources": {
+                    "type": "array",
+                    "description": "Sources locations that should be used",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tests": {
+                    "type": "array",
+                    "description": "Tests locations that should be used",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "resources": {
+                    "type": "array",
+                    "description": "Resources locations that should be used",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "executor": {
+            "type": "object",
+            "description": "Executor to be used by Paddle to execute build commands",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "local"
+                    ]
+                }
+            }
+        },
+        "plugins": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "array",
+                    "description": "Array of enabled plugins identifiers",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "jars": {
+                    "type": "array",
+                    "description": "Array of paths to jars with custom plugins",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "tasks": {
+            "type": "object",
+            "properties": {
+                "linter": {
+                    "type": "object",
+                    "properties": {
+                        "mypy": {
+                            "type": "object",
+                            "properties": {
+                                "version": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "pylint": {
+                            "type": "object",
+                            "properties": {
+                                "version": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tests": {
+                    "type": "object",
+                    "properties": {
+                        "pytest": {
+                            "type": "object",
+                            "properties": {
+                                "version": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "run": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "entrypoint": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

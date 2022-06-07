@@ -1,0 +1,6 @@
+plugins:
+  - name: greeting
+    module: plugins.py
+
+  - name: descriptor-writer
+    module: plugins.py

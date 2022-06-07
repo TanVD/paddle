@@ -6,6 +6,7 @@ import io.paddle.plugin.python.dependencies.index.PyPackageRepositoryIndexer
 import io.paddle.plugin.python.dependencies.index.distributions.ArchivePyDistributionInfo
 import io.paddle.plugin.python.dependencies.index.distributions.WheelPyDistributionInfo
 import io.paddle.plugin.python.dependencies.packages.PyPackage
+import io.paddle.plugin.python.dependencies.repositories.PyPackageRepositories
 import io.paddle.plugin.python.dependencies.repositories.PyPackageRepository
 import io.paddle.plugin.python.extensions.*
 import io.paddle.plugin.python.utils.*
@@ -15,6 +16,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.builtins.*
 import org.codehaus.plexus.util.cli.CommandLineUtils
 import org.codehaus.plexus.util.cli.Commandline
+import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 
 object PipResolver {
@@ -29,19 +31,26 @@ object PipResolver {
             "\\((?<version>[\\w\\-_.*+!]+?)\\)"
     )
 
-    fun resolve(project: Project): Set<PyPackage> {
+    fun resolve(project: Project, requirements: List<Requirements.Descriptor> = project.requirements.descriptors,
+                repositories: PyPackageRepositories = project.repositories.resolved,
+                interpreterPath: Path = project.environment.localInterpreterPath): Set<PyPackage> {
         // Collect requirements which repo is not specified directly (or specified as PyPi)
-        val generalRequirements = project.requirements.descriptors
+        val generalRequirements = requirements
             .filter { it.repo == null || it.repo == PyPackageRepository.PYPI_REPOSITORY.name }
             .map { it.name + (it.version?.let { v -> "==$v" } ?: "") }
-        val pipResolveArgs = listOf("-m", "pip", "resolve") + generalRequirements + project.repositories.resolved.asPipArgs
+
+        if (generalRequirements.isEmpty()) {
+            return emptySet()
+        }
+
+        val pipResolveArgs = listOf("-m", "pip", "resolve") + generalRequirements + repositories.asPipArgs
 
         val output = ArrayList<String>()
         Cache.find(pipResolveArgs)?.let { output.addAll(it) }
             ?: ExecutionResult(
                 CommandLineUtils.executeCommandLine(
                     Commandline().apply {
-                        executable = project.environment.localInterpreterPath.absolutePathString()
+                        executable = interpreterPath.absolutePathString()
                         addArguments(pipResolveArgs.toTypedArray())
                     },
                     { output.add(it); project.terminal.stdout(it) },
@@ -52,10 +61,10 @@ object PipResolver {
         // TODO: resolve requirements which repo is specified directly
 
         Cache.update(pipResolveArgs, output)
-        return parse(output, project)
+        return parse(output, project, repositories)
     }
 
-    private fun parse(output: List<String>, project: Project): Set<PyPackage> {
+    private fun parse(output: List<String>, project: Project, repositories: PyPackageRepositories): Set<PyPackage> {
         val startIdx = output.indexOfFirst { it == "--- RESOLVED-BEGIN ---" }
         val endIdx = output.indexOfLast { it == "--- RESOLVED-END ---" }
         if (startIdx == -1 || endIdx == -1) {
@@ -92,7 +101,7 @@ object PipResolver {
                     }
                 }
             } else {
-                project.repositories.resolved.all.find { it.url.trimmedEquals(repoUrl) }
+                repositories.all.find { it.url.trimmedEquals(repoUrl) }
                     ?: throw IllegalStateException("Unknown repository: $repoUrl")
             }
 

@@ -15,11 +15,42 @@ import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 
+
+abstract class AbstractTempVenvManager(val venv: VenvDir, val project: Project) {
+    private val interpreterPath: Path
+        get() = venv.getInterpreterPath(project)
+
+    fun install(pkg: PyPackage): ExecutionResult {
+        return project.executor.execute(
+            command = interpreterPath.absolutePathString(),
+            args = listOf("-m", "pip", "install", "--no-deps", pkg.distributionUrl),
+            workingDir = PaddlePyConfig.paddleHome.toFile(),
+            terminal = project.terminal
+        ).also {
+            val infoDir = InstalledPackageInfoDir.findByNameAndVersion(venv.sitePackages, pkg.name, pkg.version)
+            infoDir.addFile(PYPACKAGE_CACHE_FILENAME, jsonParser.encodeToString(pkg))
+        }
+    }
+
+    fun uninstall(pkg: IResolvedPyPackage): ExecutionResult {
+        return project.executor.execute(
+            command = interpreterPath.absolutePathString(),
+            args = listOf("-m", "pip", "uninstall", "-y", pkg.name),
+            workingDir = PaddlePyConfig.paddleHome.toFile(),
+            terminal = Terminal.MOCK
+        )
+    }
+
+    fun getFilesRelatedToPackage(pkg: IResolvedPyPackage): List<File> {
+        return InstalledPackageInfoDir.findByNameAndVersion(venv.sitePackages, pkg.name, pkg.version).files
+    }
+}
+
 /**
  * A service for managing Paddle's internal virtual environment, where all the packages are installed for the first time.
  * Then, Paddle moves them to the corresponding ~/.paddle/cache/repo/package/version folder.
  */
-class TempVenvManager private constructor(val venv: VenvDir, val project: Project) {
+class TempVenvManager private constructor(venv: VenvDir, project: Project) : AbstractTempVenvManager(venv, project) {
     companion object {
         @Volatile
         private var instance: TempVenvManager? = null
@@ -58,33 +89,5 @@ class TempVenvManager private constructor(val venv: VenvDir, val project: Projec
                 )
             }
         }
-    }
-
-    private val interpreterPath: Path
-        get() = venv.getInterpreterPath(project)
-
-    fun install(pkg: PyPackage): ExecutionResult {
-        return project.executor.execute(
-            command = interpreterPath.absolutePathString(),
-            args = listOf("-m", "pip", "install", "--no-deps", pkg.distributionUrl),
-            workingDir = PaddlePyConfig.paddleHome.toFile(),
-            terminal = project.terminal
-        ).also {
-            val infoDir = InstalledPackageInfoDir.findByNameAndVersion(venv.sitePackages, pkg.name, pkg.version)
-            infoDir.addFile(PYPACKAGE_CACHE_FILENAME, jsonParser.encodeToString(pkg))
-        }
-    }
-
-    fun uninstall(pkg: IResolvedPyPackage): ExecutionResult {
-        return project.executor.execute(
-            command = interpreterPath.absolutePathString(),
-            args = listOf("-m", "pip", "uninstall", "-y", pkg.name),
-            workingDir = PaddlePyConfig.paddleHome.toFile(),
-            terminal = Terminal.MOCK
-        )
-    }
-
-    fun getFilesRelatedToPackage(pkg: IResolvedPyPackage): List<File> {
-        return InstalledPackageInfoDir.findByNameAndVersion(venv.sitePackages, pkg.name, pkg.version).files
     }
 }

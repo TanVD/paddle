@@ -34,4 +34,17 @@ abstract class IncrementalTask(project: Project) : Task(project) {
 
         IncrementalCache(project).update(id, inputs.hashable(), outputs.hashable())
     }
+
+    override suspend fun runAsCoroutine() {
+        runDependentConcurrently()
+
+        if (isUpToDate()) {
+            project.terminal.commands.stdout(CommandOutput.Command.Task(id, CommandOutput.Command.Task.Status.UP_TO_DATE))
+            return
+        }
+
+        executeAsCoroutine()
+
+        IncrementalCache(project).update(id, inputs.hashable(), outputs.hashable())
+    }
 }

@@ -8,7 +8,7 @@ import java.io.File
 val Project.roots: Roots
     get() = extensions.get(Roots.Extension.key)!!
 
-class Roots(val sources: MutableList<File>, val tests: List<File>, val resources: List<File>) {
+class Roots(val sources: MutableList<File>, val tests: MutableList<File>, val resources: MutableList<File>) {
     object Extension : Project.Extension<Roots> {
         override val key: Extendable.Key<Roots> = Extendable.Key()
 

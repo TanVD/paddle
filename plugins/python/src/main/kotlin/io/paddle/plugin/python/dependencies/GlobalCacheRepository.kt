@@ -45,16 +45,15 @@ object GlobalCacheRepository {
             pkg.version
         )
 
-    fun findPackage(pkg: PyPackage, project: Project): CachedPyPackage {
+    fun findPackage(pkg: PyPackage, project: Project, tempVenvManager: AbstractTempVenvManager = TempVenvManager.getInstance(project)): CachedPyPackage {
         return cachedPackages.find { it.pkg == pkg && it.srcPath.exists() }
-            ?: installToCache(pkg, project)
+            ?: installToCache(pkg, tempVenvManager)
     }
 
-    private fun installToCache(pkg: PyPackage, project: Project): CachedPyPackage {
-        val tempVenvManager = TempVenvManager.getInstance(project)
+    private fun installToCache(pkg: PyPackage, tempVenvManager: AbstractTempVenvManager): CachedPyPackage {
         return tempVenvManager.install(pkg).expose(
             onSuccess = {
-                copyPackageRecursivelyFromTempVenv(pkg, project).also {
+                copyPackageRecursivelyFromTempVenv(pkg, tempVenvManager).also {
                     tempVenvManager.uninstall(pkg)
                 }
             },
@@ -62,8 +61,7 @@ object GlobalCacheRepository {
         )
     }
 
-    private fun copyPackageRecursivelyFromTempVenv(pkg: PyPackage, project: Project): CachedPyPackage {
-        val tmpVenvManager = TempVenvManager.getInstance(project)
+    private fun copyPackageRecursivelyFromTempVenv(pkg: PyPackage, tmpVenvManager: AbstractTempVenvManager): CachedPyPackage {
         val targetPathToCache = getPathToCachedPackage(pkg)
 
         copyPackageSourcesFromTempVenv(tmpVenvManager, pkg, targetPathToCache)
@@ -74,7 +72,7 @@ object GlobalCacheRepository {
         return cachedPkg
     }
 
-    private fun copyPackageSourcesFromTempVenv(venvManager: TempVenvManager, pkg: IResolvedPyPackage, targetPathToCache: Path) {
+    private fun copyPackageSourcesFromTempVenv(venvManager: AbstractTempVenvManager, pkg: IResolvedPyPackage, targetPathToCache: Path) {
         val packageSources = venvManager.getFilesRelatedToPackage(pkg)
         val sep = File.separatorChar
         packageSources.forEach {

@@ -3,7 +3,7 @@
     <name>Paddle</name>
     <vendor email="vdtankov@gmail.com">Vladislav Tankov</vendor>
 
-    <idea-version since-build="211.*" until-build="213.*"/>
+<!--    <idea-version since-build="211.*" until-build="213.*"/>-->
 
     <description><![CDATA[
         <p>Integrates Paddle build system with IntelliJ-based IDEs</p>
@@ -51,6 +51,9 @@
 
         <completion.contributor language="yaml"
                                 implementationClass="io.paddle.idea.completion.PyPackageVersionCompletionContributor"/>
+
+        <completion.contributor language="yaml" id="PaddlePluginsConfigCompletionContributor"
+                                implementationClass="io.paddle.idea.completion.PaddlePluginsConfigCompletionContributor"/>
     </extensions>
 
     <extensions defaultExtensionNs="JavaScript.JsonSchema">

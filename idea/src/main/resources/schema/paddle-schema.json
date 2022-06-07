@@ -52,6 +52,7 @@
     },
     "executor": {
       "description": "Executor to be used by Paddle to execute build commands",
+      "type": "object",
       "properties": {
         "type": {
           "type": "string",
@@ -59,100 +60,71 @@
             "local"
           ]
         }
-      },
-      "allOf": [
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "local"
-              }
-            }
-          },
-          "then": {
-          }
-        }
-      ]
-    },
-    "environment": {
-      "description": "Environment that should be used by Paddle for Python build process",
-      "properties": {
-        "required": [
-          "path",
-          "python"
-        ],
-        "path": {
-          "description": "Path to the virtual environment location",
-          "type": "string"
-        },
-        "python": {
-          "description": "Version of Python interpreter to be used",
-          "type": "string"
-        }
-      }
-    },
-    "repositories": {
-      "description": "List of the available PyPI repositories",
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [
-          "name",
-          "url"
-        ],
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "url": {
-            "type": "string"
-          },
-          "default": {
-            "type": "boolean"
-          },
-          "secondary": {
-            "type": "boolean"
-          }
-        }
-      }
-    },
-    "requirements": {
-      "description": "List of project requirements",
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [
-          "name"
-        ],
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "version": {
-            "type": "string"
-          },
-          "repository": {
-            "type": "string"
-          }
-        }
       }
     },
     "plugins": {
       "type": "object",
       "properties": {
-        "enabled": {
-          "description": "Array of enabled plugins identifiers",
+        "repositories": {
+          "description": "List of available plugins repositories",
           "type": "array",
           "items": {
-            "type": "string",
-            "enum": []
+            "type": "object",
+            "anyOf": [
+              {
+                "description": "Local Jar plugins repository",
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "jar": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
           }
         },
-        "jars": {
-          "description": "Array of paths to jars with custom plugins",
-          "type": "array",
-          "items": {
-            "type": "string"
+        "enabled": {
+          "description": "List of enabled plugins",
+          "type": "object",
+          "properties": {
+            "embedded": {
+              "description": "Plugins which includes in Paddle's distribution",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "python",
+                  "docker",
+                  "ssh"
+                ]
+              }
+            },
+            "local": {
+              "description": "Plugins from locals repositories such as .jar file or directory with Python module",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "repository"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "repository": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -210,6 +182,5 @@
         }
       }
     }
-  },
-  "allOf": []
+  }
 }

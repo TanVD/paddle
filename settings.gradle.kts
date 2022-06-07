@@ -6,6 +6,8 @@ include(":core")
 include(":plugins:python")
 include(":plugins:docker")
 include(":plugins:ssh")
+include(":plugins:pyinjector")
+include(":stub")
 
 pluginManagement {
     val kotlinVersion: String by settings

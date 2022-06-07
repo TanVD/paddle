@@ -16,7 +16,7 @@ import java.nio.file.Path
  *
  * https://docs.python.org/3/library/venv.html#creating-virtual-environments
  */
-class VenvDir(private val directory: File) : File(directory.path) {
+open class VenvDir(private val directory: File) : File(directory.path) {
     val bin: File
         get() = directory.resolve("bin")
 
@@ -36,7 +36,7 @@ class VenvDir(private val directory: File) : File(directory.path) {
     val pyPackages: List<PyPackage>
         get() = pyPackageFiles.map { jsonParser.decodeFromString(it.readText()) }
 
-    fun getInterpreterPath(project: Project): Path {
+    open fun getInterpreterPath(project: Project): Path {
         return bin.resolve(project.interpreter.resolved.version.executableName).toPath()
     }
 

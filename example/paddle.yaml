@@ -29,25 +29,52 @@ requirements:
     repository: pypi
 
 plugins:
+  repositories:
+    - name: py-local
+      dir: ./plugins/py
+
+    #      - name: base
+    #        url: https://some.ru
+
+    #      - name: java
+    #        jar: "./plugins/test-plugin-0.1.0.jar"
+
   enabled:
-    - python
-    - docker
-    - ssh
-#    - example-test
-#  jars:
-#    - ".../paddle/example/plugins/test-plugin-0.1.0.jar"
+    embedded:
+      - python
+      - docker
+      - ssh
+
+    local:
+      - name: greeting
+        repository: py-local
+
+      - name: descriptor-writer
+        repository: py-local
+
+#      py:
+#        - name: greeting
+#          version: 0.0.1
+#          repository: base
+#
 
 tasks:
   run:
     - entrypoint: src/main/main.py
       id: main
 
+# description writer plugin's configuration block
+desc-writer:
+  dir-name: desc-dir
+  file-name: desc-file
+
 #executor:
 #  type: docker
 #  image: python:3.9-slim
 
-#executor:
-#  type: ssh
-#  user: admin
-#  host: localhost
-#  directory: /home/project/
+# executor:
+#   type: ssh
+#   user: admin
+#   password: secret
+#   host: localhost
+#   directory: /project

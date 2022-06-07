@@ -51,4 +51,12 @@ object PaddlePyConfig {
     val distResolverCachePath: Path = paddleHome.resolve("distResolverCache.json")
 
     val pipResolverCachePath: Path = paddleHome.resolve("pipResolverCache.json")
+
+    /**
+     * A path to the internal venvs directory which contains virtual environment per project.
+     *
+     * Such an environment is used to install all new python based plugins since python's venv
+     * do not support installation of the multiple versions for a single package to the same environment.
+     */
+    val pluginsVenvs: Path = paddleHome.resolve("plugins_venvs")
 }

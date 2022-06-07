@@ -1,16 +1,14 @@
 package io.paddle.idea.completion
 
 import com.intellij.codeInsight.completion.*
-import com.intellij.codeInsight.completion.CompletionUtilCore.DUMMY_IDENTIFIER_TRIMMED
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.patterns.PlatformPatterns.*
 import com.intellij.util.ProcessingContext
 import io.paddle.idea.utils.PaddleProject
-import io.paddle.idea.utils.findPaddleInDirectory
+import io.paddle.plugin.python.dependencies.repositories.PyPackageRepositories
 import io.paddle.plugin.python.extensions.repositories
+import io.paddle.project.Project
 import org.jetbrains.yaml.psi.YAMLDocument
-import java.io.File
-import java.nio.file.Path
 
 class PyPackageNameCompletionContributor : CompletionContributor() {
     init {
@@ -27,17 +25,20 @@ class PyPackageNameCompletionContributor : CompletionContributor() {
     }
 }
 
-class PyPackageNameCompletionProvider : CompletionProvider<CompletionParameters>() {
-    override fun addCompletions(parameters: CompletionParameters, context: ProcessingContext, result: CompletionResultSet) {
-        val projectPath = parameters.editor.project?.basePath!!
-        val file = Path.of(projectPath).findPaddleInDirectory()!!.toFile()
-        val project = PaddleProject.load(file, File(projectPath))
+abstract class AbstractPyPackageNameCompletionProvider : CompletionProvider<CompletionParameters>() {
 
-        val prefix = parameters.position.text.trim().removeSuffix(DUMMY_IDENTIFIER_TRIMMED)
-        val variants = project.repositories.resolved.findAvailablePackagesByPrefix(prefix)
+    abstract fun repositories(project: Project): PyPackageRepositories
+
+    override fun addCompletions(parameters: CompletionParameters, context: ProcessingContext, result: CompletionResultSet) {
+        val prefix = result.prefixMatcher.prefix
+        val variants = repositories(PaddleProject.currentProject!!).findAvailablePackagesByPrefix(prefix)
 
         for ((pkgName, repo) in variants) {
             result.addElement(LookupElementBuilder.create(pkgName).withTypeText(repo.name, true))
         }
     }
+}
+
+class PyPackageNameCompletionProvider : AbstractPyPackageNameCompletionProvider() {
+    override fun repositories(project: Project): PyPackageRepositories = project.repositories.resolved
 }

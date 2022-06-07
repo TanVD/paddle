@@ -1,24 +1,18 @@
 package io.paddle.idea.schema
 
-import com.intellij.openapi.vfs.VfsUtil
-import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.testFramework.LightVirtualFile
+import io.paddle.specification.tree.JsonSchemaSpecification
 import io.paddle.idea.utils.PaddleProject
-import io.paddle.schema.builder.JsonSchemaBuilder
-import io.paddle.schema.extensions.jsonSchema
 
 class ExtendedJsonSchemaProvider(resource: String, presentable: String, filesToApply: Set<String>) :
     EmbeddedJsonSchemaProvider(resource, presentable, filesToApply) {
 
-    override fun getSchemaFile(): VirtualFile? {
-        val baseJsonSchema = super.getSchemaFile()
-        if (baseJsonSchema != null) {
-            val jsonSchemaBuilder = JsonSchemaBuilder(VfsUtil.loadText(baseJsonSchema))
-            PaddleProject.currentProject?.jsonSchema?.extensions?.forEach {
-                it.applyTo(jsonSchemaBuilder)
-            }
-            return LightVirtualFile(name, jsonSchemaBuilder.toString())
+    override fun getSchemaFile(): LightVirtualFile? {
+        val baseSchema = super.getSchemaFile()
+        if (baseSchema != null) {
+            val configSpec = PaddleProject.currentProject?.configSpec
+            return (configSpec as? JsonSchemaSpecification)?.let { LightVirtualFile(name, it.specialize()) }
         }
-        return baseJsonSchema
+        return baseSchema
     }
 }

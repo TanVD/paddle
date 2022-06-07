@@ -12,6 +12,8 @@ internal class IncrementalCache(val project: Project) {
     private val storage = File(project.workDir, ".paddle/cache.json")
 
     private var cache: Map<String, Cache>
+        // TODO: make it better, maybe using concurrent hash map
+        @Synchronized
         get() {
             storage.parentFile.mkdirs()
             return storage.takeIf { it.exists() }

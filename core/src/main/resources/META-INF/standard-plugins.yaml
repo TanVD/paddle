@@ -1,4 +1,6 @@
 plugins:
+  - id: pyinjector
+    class: io.paddle.plugin.pyinjector.PyInjectorPlugin
   - id: docker
     class: io.paddle.plugin.docker.DockerPlugin
   - id: python

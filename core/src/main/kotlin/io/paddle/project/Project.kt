@@ -2,18 +2,21 @@ package io.paddle.project
 
 import io.paddle.execution.CommandExecutor
 import io.paddle.execution.local.LocalCommandExecutor
-import io.paddle.plugin.Plugin
-import io.paddle.plugin.standard.extensions.Plugins
-import io.paddle.schema.extensions.BaseJsonSchemaExtension
-import io.paddle.schema.extensions.JsonSchema
+import io.paddle.plugin.*
+import io.paddle.plugin.repositories.JarPluginsRepositories
+import io.paddle.specification.tree.JsonSchemaSpecification
+import io.paddle.specification.tree.SpecializedConfigSpec
 import io.paddle.terminal.*
 import io.paddle.utils.config.Configuration
 import io.paddle.utils.ext.Extendable
-import io.paddle.utils.yaml.YAML
 import io.paddle.utils.hash.StringHashable
+import io.paddle.utils.yaml.YAML
 import java.io.File
 
-class Project(val config: Configuration, val workDir: File = File("."), val output: TextOutput = TextOutput.Console) {
+class Project(
+    val config: Configuration, var configSpec: SpecializedConfigSpec<*>,
+    val workDir: File = File("."), val output: TextOutput = TextOutput.Console,
+) {
     interface Extension<V : Any> {
         val key: Extendable.Key<V>
 
@@ -31,19 +34,14 @@ class Project(val config: Configuration, val workDir: File = File("."), val outp
 
 
     init {
+        extensions.register(JarPluginsRepositories.Extension.key, JarPluginsRepositories.Extension.create(this))
+        extensions.register(LocalPluginsDescriptors.Extension.key, LocalPluginsDescriptors.Extension.create(this))
         extensions.register(Plugins.Extension.key, Plugins.Extension.create(this))
-        extensions.register(JsonSchema.Extension.key, JsonSchema.Extension.create(this))
     }
 
     fun register(plugin: Plugin) {
         for (extension in plugin.extensions(this)) {
-            val extensionToStorage = extension.create(this)
-            // zhvkgj: implementation via marker annotation checks can be better than this one
-            if (extensionToStorage is BaseJsonSchemaExtension) {
-                extensions.get(JsonSchema.Extension.key)?.extensions?.add(extensionToStorage)
-            } else {
-                extensions.register(extension.key, extensionToStorage)
-            }
+            extensions.register(extension.key, extension.create(this))
         }
 
         for (task in plugin.tasks(this)) {
@@ -54,7 +52,7 @@ class Project(val config: Configuration, val workDir: File = File("."), val outp
     }
 
     fun register(plugins: Iterable<Plugin>) {
-        plugins.forEach { this.register(it) }
+        plugins.forEach(::register)
     }
 
     fun execute(id: String) {
@@ -66,8 +64,11 @@ class Project(val config: Configuration, val workDir: File = File("."), val outp
     }
 
     companion object {
-        fun load(file: File): Project {
-            return Project(config = Configuration.from(file))
+        fun load(configFile: File): Project {
+            return Project(
+                config = Configuration.from(configFile),
+                configSpec = JsonSchemaSpecification.base
+            )
         }
     }
 }

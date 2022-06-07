@@ -13,3 +13,7 @@ fun File.deleteRecursivelyWithoutSymlinks() {
 }
 
 fun Path.exists(): Boolean = Files.exists(this)
+
+fun String.toFile(): File = File(this)
+
+fun Collection<File>.absolutePathStrings(): Collection<String> = map(File::getAbsolutePath)
